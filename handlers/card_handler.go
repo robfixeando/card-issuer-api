@@ -30,7 +30,7 @@ func CreateCard(c *gin.Context) {
 		return
 	}
 
-	// Seguridad PCI: Extraer últimos 4 dígitos y hashear el PAN completo
+	// Extraer últimos 4 dígitos y hashear el PAN completo
 	last4 := input.Pan[len(input.Pan)-4:]
 	panHash := utils.HashPan(input.Pan)
 
@@ -42,7 +42,6 @@ func CreateCard(c *gin.Context) {
 		Status:         "ISSUED",
 	}
 
-	// Guardar en la base de datos
 	if err := database.DB.Create(&card).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "No se pudo emitir la tarjeta"})
 		return
@@ -65,7 +64,7 @@ func BatchCreateCards(c *gin.Context) {
 
 	var createdCards []models.Card
 
-	// Transacción para asegurar consistencia atómica en el lote
+	// Transacción para asegurar la consistencia
 	err := database.DB.Transaction(func(tx *gorm.DB) error {
 		for _, item := range input.Cards {
 			last4 := item.Pan[len(item.Pan)-4:]
@@ -102,7 +101,6 @@ func BatchCreateCards(c *gin.Context) {
 func ListCards(c *gin.Context) {
 	tenantID := c.GetString("tenant_id")
 
-	// 1. Parámetros de Paginación (Valores por defecto: page=1, limit=10)
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
 	if page < 1 {
@@ -113,23 +111,19 @@ func ListCards(c *gin.Context) {
 	}
 	offset := (page - 1) * limit
 
-	// 2. Filtro opcional por Status
 	statusQuery := c.Query("status")
 
 	var cards []models.Card
 	var total int64
 
-	// Construcción de la consulta base aislada por tenant
 	query := database.DB.Model(&models.Card{}).Where("tenant_id = ?", tenantID)
 
 	if statusQuery != "" {
 		query = query.Where("status = ?", statusQuery)
 	}
 
-	// Contar total de registros filtrados
 	query.Count(&total)
 
-	// Obtener registros paginados
 	if err := query.Offset(offset).Limit(limit).Find(&cards).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "No se pudieron recuperar las tarjetas"})
 		return
@@ -157,7 +151,7 @@ func UpdateCardStatus(c *gin.Context) {
 	}
 
 	var card models.Card
-	// Buscamos la tarjeta asegurando que pertenezca al tenant actual (Aislamiento Multi-tenant)
+	// Busco la tarjeta asegurando que pertenezca al tenant actual
 	if err := database.DB.Where("id = ? AND tenant_id = ?", cardID, tenantID).First(&card).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Tarjeta no encontrada"})
 		return
@@ -180,7 +174,7 @@ func GetCardByID(c *gin.Context) {
 	cardID := c.Param("id")
 
 	var card models.Card
-	// Buscamos la tarjeta asegurando que coincida el ID y el TenantID (Aislamiento Multi-tenant)
+
 	if err := database.DB.Where("id = ? AND tenant_id = ?", cardID, tenantID).First(&card).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Tarjeta no encontrada"})
 		return

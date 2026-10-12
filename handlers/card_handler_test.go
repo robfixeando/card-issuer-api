@@ -75,7 +75,7 @@ func TestTenantDataIsolation(t *testing.T) {
 		Status:         "ISSUED",
 	})
 
-	// 1. Verificar listado aislado
+	// Verificar listado aislado
 	reqList, _ := http.NewRequest("GET", "/api/v1/cards", nil)
 	reqList.Header.Set("X-Tenant-ID", "banco-galicia")
 	wList := httptest.NewRecorder()
@@ -87,7 +87,7 @@ func TestTenantDataIsolation(t *testing.T) {
 		t.Errorf("El tenant 'banco-galicia' debería ver exactamente 1 tarjeta")
 	}
 
-	// 2. Verificar GET /cards/:id ajeno (Debe retornar 404)
+	// GET /cards/:id ajeno (Debe retornar 404)
 	reqGet, _ := http.NewRequest("GET", "/api/v1/cards/2", nil)
 	reqGet.Header.Set("X-Tenant-ID", "banco-galicia")
 	wGet := httptest.NewRecorder()

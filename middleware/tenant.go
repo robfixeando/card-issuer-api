@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"net/http"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -13,7 +14,7 @@ func TenantMiddleware() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		// Guardo tenant_id en el contexto para usarlo en los controladores
+		// Guardo tenant_id en el contexto
 		c.Set("tenant_id", tenantID)
 		c.Next()
 	}
