@@ -1,8 +1,8 @@
 # Decision Log & Tradeoff Write-up - Card Issuer API
 
 ## 1. Decisiones de Arquitectura
-- **Estructura directa en Handlers:** Decidí no armar capas de servicios o repositorios kilométricas para mantener el código simple y fácil de leer. En Go, menos abstracción innecesaria significa un código más claro.
-- **SQLite sin CGO (`github.com/glebarez/sqlite`):** Usé el driver puro en Go para olvidarme por completo de los dolores de cabeza de compilar con `gcc` o lidiar con dependencias de C en distintas máquinas.
+- **Estructura directa en Handlers:** Decidí no armar capas de servicios o repositorios para mantener el código simple y fácil de leer.
+- **SQLite sin CGO:** Usé el driver puro en Go.
 
 ## 2. Estrategia para Procesamiento por Lotes (Batch Processing)
 - **Transacciones atómicas:** Todo el lote corre dentro de una transacción de GORM. Si una tarjeta del lote viene mal o falla, se hace `rollback` automático de todo el bloque para no dejar la base de datos a medias.
